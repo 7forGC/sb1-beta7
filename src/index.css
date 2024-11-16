@@ -1,0 +1,243 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --vh: 1vh;
+  --app-width: min(428px, 100%);
+  --app-height: 100vh;
+  --header-height: 64px;
+  --footer-height: 64px;
+  --safe-area-top: env(safe-area-inset-top);
+  --safe-area-bottom: env(safe-area-inset-bottom);
+  --safe-area-left: env(safe-area-inset-left);
+  --safe-area-right: env(safe-area-inset-right);
+  --keyboard-height: 0px;
+}
+
+html, body {
+  height: 100%;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+  background-color: theme('colors.gray.100');
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Enable text selection in inputs and textareas */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-container {
+  width: var(--app-width);
+  height: var(--app-height);
+  max-height: 926px;
+  overflow: hidden;
+  position: relative;
+  background-color: white;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Content area with fixed header and footer */
+.content-area {
+  height: 100%;
+  padding-top: calc(var(--header-height) + var(--safe-area-top));
+  padding-bottom: calc(var(--footer-height) + var(--safe-area-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+/* Mobile height fix for iOS */
+@supports (-webkit-touch-callout: none) {
+  .app-container {
+    height: -webkit-fill-available;
+  }
+  
+  /* Fix for iOS keyboard */
+  .has-keyboard {
+    height: calc(100vh - var(--keyboard-height));
+  }
+
+  /* Adjust content area when keyboard is visible */
+  .has-keyboard .content-area {
+    height: calc(100vh - var(--keyboard-height));
+    padding-bottom: calc(var(--footer-height));
+  }
+}
+
+/* Hide scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Safe area padding */
+.safe-padding-top {
+  padding-top: max(env(safe-area-inset-top), 16px);
+}
+
+.safe-padding-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+
+.safe-padding-left {
+  padding-left: max(env(safe-area-inset-left), 16px);
+}
+
+.safe-padding-right {
+  padding-right: max(env(safe-area-inset-right), 16px);
+}
+
+/* Header styles */
+.mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background: white;
+  border-bottom: 1px solid theme('colors.gray.200');
+  z-index: 40;
+  padding-top: var(--safe-area-top);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+/* Footer styles */
+.mobile-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--footer-height);
+  background: white;
+  border-top: 1px solid theme('colors.gray.200');
+  z-index: 40;
+  padding-bottom: var(--safe-area-bottom);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+/* Connected users list */
+.connected-users {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.connected-users > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* Active states for touch devices */
+@media (hover: none) {
+  .touch-highlight:active {
+    background-color: theme('colors.gray.100');
+  }
+}
+
+/* PWA status bar color */
+@media all and (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Tablet enhancements */
+@media (min-width: 768px) {
+  .app-container {
+    border-radius: 12px;
+    max-width: 428px;
+  }
+}
+
+/* Landscape mode */
+@media screen and (orientation: landscape) {
+  .app-container {
+    max-height: 100vh;
+  }
+}
+
+/* Fix for notched devices */
+@supports (padding-top: constant(safe-area-inset-top)) {
+  .mobile-header {
+    padding-top: constant(safe-area-inset-top);
+  }
+  
+  .mobile-footer {
+    padding-bottom: constant(safe-area-inset-bottom);
+  }
+}
+
+/* Active touch feedback */
+.touch-feedback {
+  position: relative;
+  overflow: hidden;
+}
+
+.touch-feedback::after {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #000 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform .5s, opacity 1s;
+}
+
+.touch-feedback:active::after {
+  transform: scale(0, 0);
+  opacity: .2;
+  transition: 0s;
+}
+
+/* Chat container specific styles */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: calc(100vh - var(--header-height) - var(--footer-height) - var(--safe-area-top) - var(--safe-area-bottom));
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.input-container {
+  flex-shrink: 0;
+  background: white;
+  border-top: 1px solid theme('colors.gray.200');
+  padding: 1rem;
+  margin-bottom: env(safe-area-inset-bottom);
+}

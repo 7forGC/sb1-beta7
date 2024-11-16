@@ -1,0 +1,79 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isVideoType() {
+      return request.resource.contentType.matches('video/.*');
+    }
+    
+    function isAudioType() {
+      return request.resource.contentType.matches('audio/.*');
+    }
+    
+    function isValidFileSize(maxSize) {
+      return request.resource.size <= maxSize;
+    }
+
+    // Profile pictures
+    match /avatars/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) &&
+        isImageType() &&
+        isValidFileSize(5 * 1024 * 1024); // 5MB max
+    }
+    
+    // Chat media
+    match /media/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) &&
+        (isImageType() || isVideoType() || isAudioType()) &&
+        isValidFileSize(100 * 1024 * 1024); // 100MB max
+    }
+    
+    // Stories
+    match /stories/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) &&
+        (isImageType() || isVideoType()) &&
+        isValidFileSize(50 * 1024 * 1024); // 50MB max
+    }
+    
+    // Group avatars
+    match /groups/{groupId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() &&
+        isImageType() &&
+        isValidFileSize(5 * 1024 * 1024); // 5MB max
+    }
+    
+    // Chat wallpapers
+    match /wallpapers/{userId}/{fileName} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) &&
+        isImageType() &&
+        isValidFileSize(10 * 1024 * 1024); // 10MB max
+    }
+    
+    // Temporary files
+    match /temp/{userId}/{fileName} {
+      allow read, write: if isOwner(userId) &&
+        isValidFileSize(100 * 1024 * 1024); // 100MB max
+      
+      // Auto-delete after 24 hours
+      match /{allPaths=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

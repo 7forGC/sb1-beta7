@@ -1,0 +1,48 @@
+{
+  "format": "layers-model",
+  "generatedBy": "TensorFlow.js v4.17.0",
+  "convertedBy": "TensorFlow.js Converter v4.17.0",
+  "modelTopology": {
+    "class_name": "Sequential",
+    "config": {
+      "name": "tiny_translator",
+      "layers": [
+        {
+          "class_name": "Embedding",
+          "config": {
+            "input_dim": 32000,
+            "output_dim": 256,
+            "embeddings_initializer": {"class_name": "RandomUniform"}
+          }
+        },
+        {
+          "class_name": "LSTM",
+          "config": {
+            "units": 512,
+            "return_sequences": true
+          }
+        },
+        {
+          "class_name": "Dense",
+          "config": {
+            "units": 32000,
+            "activation": "softmax"
+          }
+        }
+      ]
+    }
+  },
+  "weightsManifest": [
+    {
+      "paths": ["group1-shard1of1.bin"],
+      "weights": [
+        {"name": "embedding/embeddings", "shape": [32000, 256], "dtype": "float32"},
+        {"name": "lstm/kernel", "shape": [256, 2048], "dtype": "float32"},
+        {"name": "lstm/recurrent_kernel", "shape": [512, 2048], "dtype": "float32"},
+        {"name": "lstm/bias", "shape": [2048], "dtype": "float32"},
+        {"name": "dense/kernel", "shape": [512, 32000], "dtype": "float32"},
+        {"name": "dense/bias", "shape": [32000], "dtype": "float32"}
+      ]
+    }
+  ]
+}

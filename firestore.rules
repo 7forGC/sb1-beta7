@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      
+      match /private/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // Messages
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.senderId == request.auth.uid ||
+         resource.data.receiverId == request.auth.uid);
+      allow create: if isAuthenticated() &&
+        request.resource.data.senderId == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        (resource.data.senderId == request.auth.uid ||
+         resource.data.receiverId == request.auth.uid);
+      allow delete: if isAuthenticated() &&
+        resource.data.senderId == request.auth.uid;
+    }
+    
+    // Group chats
+    match /groups/{groupId} {
+      allow read: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+      allow delete: if isAuthenticated() &&
+        get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid;
+    }
+    
+    // Group messages
+    match /groupMessages/{messageId} {
+      allow read: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/groups/$(resource.data.groupId)/members/$(request.auth.uid));
+      allow create: if isAuthenticated() &&
+        exists(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/members/$(request.auth.uid));
+      allow update, delete: if isAuthenticated() &&
+        resource.data.senderId == request.auth.uid;
+    }
+    
+    // Calls
+    match /calls/{callId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.callerId == request.auth.uid ||
+         resource.data.receiverId == request.auth.uid);
+      allow create: if isAuthenticated() &&
+        request.resource.data.callerId == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        (resource.data.callerId == request.auth.uid ||
+         resource.data.receiverId == request.auth.uid);
+    }
+    
+    // Stories
+    match /stories/{storyId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        (resource.data.userId == request.auth.uid ||
+         request.resource.data.diff().affectedKeys()
+         .hasOnly(['views', 'likes']));
+      allow delete: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Translation stats
+    match /translationStats/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // API keys
+    match /apiKeys/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Sessions
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+      allow write: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Network stats
+    match /networkStats/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}
